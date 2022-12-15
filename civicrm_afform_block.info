@@ -1,0 +1,6 @@
+name = "CiviCRM Afform Block"
+description = "Allow CiviCRM native forms from the Form Builder extension to be placed on the front-end of your Backdrop site using blocks."
+backdrop = 1.x
+type = module
+
+dependencies[] = civicrm

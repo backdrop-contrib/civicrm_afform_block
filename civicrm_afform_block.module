@@ -1,0 +1,113 @@
+<?php
+
+/**
+ * @file
+ * CiviCRM Afform Block
+ */
+
+/**
+ * Implements hook_theme().
+ */
+function civicrm_afform_block_theme() {
+  return array(
+    'civicrm_afform_block' => array(
+      'variables' => array(
+        'name' => NULL,
+        'directive' => NULL
+      ),
+      'template' => 'templates/civicrm-afform-block',
+    )
+  );
+}
+
+/**
+ * Implements hook_block_info().
+ */
+function civicrm_afform_block_block_info() {
+  $blocks['afform'] = array(
+    'info' => t('CiviCRM Form Builder form'),
+    'description' => t('Displays a form created with CiviCRM Form Builder.'),
+    'weight' => '1',
+  );
+
+  return $blocks;
+}
+
+/**
+ * Implements hook_block_view().
+ */
+function civicrm_afform_block_block_view($delta = '', $settings = array()) {
+  $block = array();
+  if ($delta == 'afform') {
+    $block['subject'] = NULL;
+    $block['content'] = civicrm_afform_block_output_block($settings);
+
+    return $block;
+  }
+}
+
+/**
+ * Implements hook_block_configure().
+ */
+function civicrm_afform_block_block_configure($delta = '', $settings = array()) {
+  if ($delta === 'afform') {
+    if (!civicrm_initialize()) {
+      return array();
+    }
+    $afforms = \Civi\Api4\Afform::get()
+      ->addSelect('module_name', 'title')
+      ->addWhere('type', 'IN', ['form', 'search', 'system'])
+      ->execute();
+    $options = array();
+    foreach ($afforms as $afform) {
+      if ($afform['title']) {
+        $options[$afform['module_name']] = $afform['title'];
+      } else {
+        $options[$afform['module_name']] = $afform['module_name'];
+      }
+    }
+
+    $form['civicrm_afform_block_form_name'] = [
+      '#type' => 'select',
+      '#title' => t('CiviCRM Form Name'),
+      '#description' => t('Which form would you like to display?'),
+      '#default_value' => $settings['civicrm_afform_block_form_name'] ?? '',
+      '#options' => $options,
+    ];
+
+  }
+  return $form;
+}
+
+/**
+ * Implements hook_block_save().
+ */
+function civicrm_afform_block_block_save($delta, &$edit = array()) {
+  if ($delta === 'afform') {
+    if (!civicrm_initialize()) {
+      return;
+    }
+    $get_directive_name = \Civi\Api4\Afform::get(FALSE)
+      ->addWhere('name', '=', $edit['civicrm_afform_block_form_name'])
+      ->setLimit(1)
+      ->addSelect('directive_name')
+      ->execute();
+    $edit['civicrm_afform_block_directive_name'] = $get_directive_name[0]['directive_name'];
+  }
+}
+
+/**
+ * Output the content for the afform block.
+ *
+ * @see civicrm_afform_block_block_view()
+ */
+function civicrm_afform_block_output_block($settings = array()) {
+  if (!civicrm_initialize()) {
+    return array();
+  }
+  \CRM_Core_Resources::singleton()->addCoreResources();
+  \Civi::service('angularjs.loader')
+  ->addModules($settings['civicrm_afform_block_form_name']);
+
+  return theme('civicrm_afform_block', array('name' => $settings['civicrm_afform_block_form_name'], 'directive' => $settings['civicrm_afform_block_directive_name']));
+}
