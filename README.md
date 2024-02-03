@@ -16,6 +16,7 @@ This project is GPL v2 software. See the LICENSE.txt file in this directory for 
 ## Current Maintainers
 
 * [Herb v/d Dool](https://github.com/herbdool/)
+* [Eli Lisseck](https://github.com/elisseck), [Giant Rabbit](https://github.com/giant-rabbit)
 * This module is currently seeking co-maintainers.
 
 ## Credits
